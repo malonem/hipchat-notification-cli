@@ -19,25 +19,25 @@ func main() {
 	flag.Parse()
 
 	buf := bytes.NewBuffer(nil)
-	f := os.Stdin
-	var s string
-	if f != nil {
-		fi, err := f.Stat()
+	stdin := os.Stdin
+	var message string
+	if stdin != nil {
+		pipeFile, err := stdin.Stat()
 		if err != nil {
 			panic(err)
 		}
-		if fi.Mode()&os.ModeNamedPipe != 0 {
-			io.Copy(buf, f)
-			f.Close()
+		if pipeFile.Mode()&os.ModeNamedPipe != 0 {
+			io.Copy(buf, stdin)
+			stdin.Close()
 		}
-		s = string(buf.Bytes())
+		message = string(buf.Bytes())
 	}
 
 	if len(*token) > 0 && len(*room) > 0 {
-		c := hipchat.NewClient(*token)
-		notifRq := &hipchat.NotificationRequest{Message: s, Color: *color, Notify: *notify, MessageFormat: *format}
+		client := hipchat.NewClient(*token)
+		notifRq := &hipchat.NotificationRequest{Message: message, Color: *color, Notify: *notify, MessageFormat: *format}
 
-		resp, err := c.Room.Notification(*room, notifRq)
+		resp, err := client.Room.Notification(*room, notifRq)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error during room notification %q\n", err)
 			fmt.Fprintf(os.Stderr, "Server returns %+v\n", resp)
